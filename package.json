@@ -1,7 +1,26 @@
 {
-	"name": "pinf.sh",
-	"version": "0.1.1",
-	"bin": {
-		"pinf.sh": "./pinf.sh"
-	}
+  "name": "pinf.sh",
+  "version": "0.1.2",
+  "bin": {
+    "pinf.sh": "./pinf.sh"
+  },
+  "dependencies": {
+    "org.pinf.genesis.lib": "0.1.x",
+    "q": "^1.4.1",
+    "smi.cli": "0.35.x"
+  },
+  "config": {
+    "org.pinf.genesis.lib/0": {
+      "api": {
+        "consumes": {
+          "config": "org.pinf.genesis.lib/0/config",
+          "PATH": "path",
+          "FS": "fs",
+          "WAITFOR": "waitfor",
+          "Q": "q",
+          "URL": "url"
+        }
+      }
+    }
+  }
 }

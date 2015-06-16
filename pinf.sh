@@ -7,6 +7,11 @@ function init {
 	local __BO_DIR__="$___TMP___"
 
 
-	BO_run_node "$__BO_DIR__/pinf.js"
+	BO_run_node "$__BO_DIR__/pinf.js" $@
+
+	if [ ! -e ".pgs/.provisioned" ]; then
+		BO_callPlugin "bash.origin.pinf@0.1.2" ensure genesis $@
+	fi
+
 }
 init $@
