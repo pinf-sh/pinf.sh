@@ -29,7 +29,8 @@ require('org.pinf.genesis.lib').forModule(require, module, function (API, export
 			var repos = {};
 			function checkUri (uri) {
 				if (typeof uri !== "string") {
-					return callback(new Error("Got object instead of uri: " + JSON.stringify(uri)));
+					return null;
+//					return callback(new Error("Got object instead of uri: " + JSON.stringify(uri)));
 				}
 				var uriParts = API.URL.parse(uri);
 				if (
@@ -61,9 +62,20 @@ require('org.pinf.genesis.lib').forModule(require, module, function (API, export
 			}
 			if (pinfDescriptor["@extends"]) {
 				Object.keys(pinfDescriptor["@extends"]).forEach(function (alias) {
-					var repo = checkUri(pinfDescriptor["@extends"][alias]);
-					if (repo) {
-						pinfOverrideDescriptor["@extends"][alias] = repo.localUri;
+					var repo = null;
+					if (typeof pinfDescriptor["@extends"][alias].location === "string") {
+						repo = checkUri(pinfDescriptor["@extends"][alias].location);
+						if (repo) {
+							pinfOverrideDescriptor["@extends"][alias] = {
+								location: repo.localUri
+							};
+						}
+					} else
+					if (typeof pinfDescriptor["@extends"][alias] === "string") {
+						repo = checkUri(pinfDescriptor["@extends"][alias]);
+						if (repo) {
+							pinfOverrideDescriptor["@extends"][alias] = repo.localUri;
+						}
 					}
 				});
 			}
