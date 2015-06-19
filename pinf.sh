@@ -15,7 +15,7 @@ function init {
 
 	export PIO_PROFILE_PATH="$__BO_DIR__/empty.profile.json"
 
-	./boot spin $@
+	./boot turn $@
 
 }
 init $@
