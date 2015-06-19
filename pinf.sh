@@ -13,5 +13,9 @@ function init {
 		BO_callPlugin "bash.origin.pinf@0.1.8" ensure genesis $@
 	fi
 
+	export PIO_PROFILE_PATH="$__BO_DIR__/empty.profile.json"
+
+	./boot spin $@
+
 }
 init $@
