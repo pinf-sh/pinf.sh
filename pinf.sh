@@ -8,11 +8,10 @@ function init {
 
 
 	if [ -f "$__BO_DIR__/node_modules/bash.origin" ]; then
-			# Use OUR Bash.Origin script from now on (even to handle the install if the previously
-			# installed version supports delegation).
-			export BO_ROOT_SCRIPT_PATH="$__BO_DIR__/node_modules/bash.origin/bash.origin"
-			"$BO_ROOT_SCRIPT_PATH" BO install -f > /dev/null
-		fi
+		# Use OUR Bash.Origin script from now on (even to handle the install if the previously
+		# installed version supports delegation).
+		export BO_ROOT_SCRIPT_PATH="$__BO_DIR__/node_modules/bash.origin/bash.origin"
+		"$BO_ROOT_SCRIPT_PATH" BO install -f > /dev/null
 		. "$BO_ROOT_SCRIPT_PATH"
 	fi
 

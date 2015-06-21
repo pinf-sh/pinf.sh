@@ -51,11 +51,11 @@ require('org.pinf.genesis.lib').forModule(require, module, function (API, export
 					uriParts.protocol === "https:"
 				) {
 					if (uriParts.host !== "github.com") {
-						return callback(new Error("Only github URIs are currently supported!"));
+						throw new Error("Only github URIs are currently supported!");
 					}
 					var pathParts = uriParts.path.split("/");
 					if (!pathParts[3]) {
-						return callback(new Error("Only 'blob' URIs are currently supported! e.g. https://github.com/OpenGinseng/GinsengGenesisCore/blob/master/smi.json"));
+						throw new Error("Only 'blob' URIs are currently supported! e.g. https://github.com/OpenGinseng/GinsengGenesisCore/blob/master/smi.json");
 					}
 					var repoKey = uriParts.host + "~" + pathParts.slice(1,3).join("~") + "~" + pathParts[4];
 					var repo = repos[repoKey];
@@ -64,13 +64,13 @@ require('org.pinf.genesis.lib').forModule(require, module, function (API, export
 							giturl: "git@github.com:" + pathParts.slice(1,3).join("/") + ".git",
 							branch: pathParts[4],
 							path: ".deps/" + uriParts.host + "~" + pathParts.slice(1,3).join("~") + "~0/source/installed/" + pathParts[4],
-							rawurl: ,
 							uriPrefixes: {}
 						};
 						repo.uriPrefixes[uriParts.protocol + "//" + uriParts.host + "/" + pathParts.slice(1,5).join("/")] = true;
 					}
 					repo.localAlias = pathParts.slice(5).join("/");
 					repo.localUri = "{{__DIRNAME__}}/.deps/github.com~" + pathParts.slice(1,3).join("~") + "~0/source/installed/" + pathParts[4] + "/" + pathParts.slice(5).join("/");
+					repo.rawurl = "https://raw.githubusercontent.com/" + pathParts.slice(1,3).join("/") + "/master/" + pathParts.slice(5).join("/");
 					return repo;
 				}
 			}
@@ -99,7 +99,7 @@ require('org.pinf.genesis.lib').forModule(require, module, function (API, export
 			function processUriArgs (callback) {
 				var waitfor = API.WAITFOR.serial(callback);
 				process.argv.slice(2).forEach(function (uri) {
-					waitfor(function (callback) {
+					waitfor(uri, function (uri, callback) {
 						var m = uri.match(/^(!)?(\/.+)$/);
 						if (m) {
 							if (API.FS.existsSync(m[2])) {
@@ -122,17 +122,12 @@ require('org.pinf.genesis.lib').forModule(require, module, function (API, export
 								API.console.verbose("Fetch:", repo.rawurl);
 								return API.REQUEST(repo.rawurl, function (err, response, body) {
 									if (err) return callback(null);
-
-console.log("response, body", response, body);
-
-/*
-									var descriptor = require(m[2]);
+									var descriptor = JSON.parse(body);
 									if (descriptor.dependencies) {
 										for (var name in descriptor.dependencies) {
 											packageOverrideDescriptor.dependencies[name] = descriptor.dependencies[name];
 										}
 									}
-*/
 									return callback(null);
 								});
 							}
@@ -140,7 +135,7 @@ console.log("response, body", response, body);
 						return callback(null);
 					});
 				});
-				return waitfor;
+				return waitfor();
 			}
 
 			return processUriArgs(function (err) {
