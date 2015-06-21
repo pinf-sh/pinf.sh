@@ -64,6 +64,7 @@ require('org.pinf.genesis.lib').forModule(require, module, function (API, export
 							giturl: "git@github.com:" + pathParts.slice(1,3).join("/") + ".git",
 							branch: pathParts[4],
 							path: ".deps/" + uriParts.host + "~" + pathParts.slice(1,3).join("~") + "~0/source/installed/" + pathParts[4],
+							rawurl: ,
 							uriPrefixes: {}
 						};
 						repo.uriPrefixes[uriParts.protocol + "//" + uriParts.host + "/" + pathParts.slice(1,5).join("/")] = true;
@@ -79,6 +80,7 @@ require('org.pinf.genesis.lib').forModule(require, module, function (API, export
 					if (typeof pinfDescriptor["@extends"][alias].location === "string") {
 						repo = checkUri(pinfDescriptor["@extends"][alias].location);
 						if (repo) {
+							repo.install = false;
 							pinfOverrideDescriptor["@extends"][alias] = {
 								location: repo.localUri
 							};
@@ -87,76 +89,106 @@ require('org.pinf.genesis.lib').forModule(require, module, function (API, export
 					if (typeof pinfDescriptor["@extends"][alias] === "string") {
 						repo = checkUri(pinfDescriptor["@extends"][alias]);
 						if (repo) {
+							repo.install = false;
 							pinfOverrideDescriptor["@extends"][alias] = repo.localUri;
 						}
 					}
 				});
 			}
-			process.argv.slice(2).forEach(function (uri) {
-				var m = uri.match(/^(!)?(\/.+)$/);
-				if (m) {
-					if (API.FS.existsSync(m[2])) {
-						pinfOverrideDescriptor["@extends"][m[2]] = m[2];
-						var descriptor = require(m[2]);
-						if (descriptor.dependencies) {
-							for (var name in descriptor.dependencies) {
-								packageOverrideDescriptor.dependencies[name] = descriptor.dependencies[name];
+
+			function processUriArgs (callback) {
+				var waitfor = API.WAITFOR.serial(callback);
+				process.argv.slice(2).forEach(function (uri) {
+					waitfor(function (callback) {
+						var m = uri.match(/^(!)?(\/.+)$/);
+						if (m) {
+							if (API.FS.existsSync(m[2])) {
+								pinfOverrideDescriptor["@extends"][m[2]] = m[2];
+								var descriptor = require(m[2]);
+								if (descriptor.dependencies) {
+									for (var name in descriptor.dependencies) {
+										packageOverrideDescriptor.dependencies[name] = descriptor.dependencies[name];
+									}
+								}
+							} else {
+								if (m[1] !== "!") {
+									throw new Error("Path '" + m[2] + "' not found (prefix with '!' to make it optional)");
+								}
+							}
+						} else {
+							var repo = checkUri(uri);
+							if (repo) {
+								pinfOverrideDescriptor["@extends"][repo.localAlias] = repo.localUri;
+								API.console.verbose("Fetch:", repo.rawurl);
+								return API.REQUEST(repo.rawurl, function (err, response, body) {
+									if (err) return callback(null);
+
+console.log("response, body", response, body);
+
+/*
+									var descriptor = require(m[2]);
+									if (descriptor.dependencies) {
+										for (var name in descriptor.dependencies) {
+											packageOverrideDescriptor.dependencies[name] = descriptor.dependencies[name];
+										}
+									}
+*/
+									return callback(null);
+								});
 							}
 						}
-					} else {
-						if (m[1] !== "!") {
-							throw new Error("Path '" + m[2] + "' not found (prefix with '!' to make it optional)");
-						}
+						return callback(null);
+					});
+				});
+				return waitfor;
+			}
+
+			return processUriArgs(function (err) {
+				if (err) return callback(err);
+
+				Object.keys(repos).forEach(function (repoId) {
+					packageOverrideDescriptor.mappings["{{__DIRNAME__}}/" + repos[repoId].path] = {
+						"location": repos[repoId].giturl,
+						"install": (repos[repoId].install === false)? false : true
+					};
+				});
+
+				var pinfOverrideDescriptorPath = API.PATH.join(workspacePath, "PINF.local.json");
+				API.FS.writeFileSync(pinfOverrideDescriptorPath, JSON.stringify(pinfOverrideDescriptor, null, 4), "utf8");
+
+				var packageOverrideDescriptorPath = API.PATH.join(workspacePath, "package.local.json");
+				API.FS.writeFileSync(packageOverrideDescriptorPath, JSON.stringify(packageOverrideDescriptor, null, 4), "utf8");
+
+
+				var proc = SPAWN(API.PATH.join(__dirname, "node_modules/smi.cli/bin/smi"), [
+			        "install",
+			        "-vd"
+			    ], {
+			    	cwd: workspacePath
+			    });
+			    proc.on("error", function(err) {
+			    	return callback(err);
+			    });
+
+			    proc.stdout.on('data', function (data) {
+					if (API.VERBOSE) {
+						process.stdout.write(data);
 					}
-				} else {
-					var repo = checkUri(uri);
-					if (repo) {
-						pinfOverrideDescriptor["@extends"][repo.localAlias] = repo.localUri;
+			    });
+			    proc.stderr.on('data', function (data) {
+					if (API.VERBOSE) {
+						process.stderr.write(data);
 					}
-				}
+			    });
+			    proc.on('close', function (code) {
+			    	if (code) {
+			    		var err = new Error("Commands exited with code: " + code);
+			    		err.code = code;
+			    		return callback(err);
+			    	}
+			        return callback(null);
+			    });
 			});
-
-			Object.keys(repos).forEach(function (repoId) {
-				packageOverrideDescriptor.mappings["{{__DIRNAME__}}/" + repos[repoId].path] = {
-					"location": repos[repoId].giturl
-				};
-			});
-
-			var pinfOverrideDescriptorPath = API.PATH.join(workspacePath, "PINF.local.json");
-			API.FS.writeFileSync(pinfOverrideDescriptorPath, JSON.stringify(pinfOverrideDescriptor, null, 4), "utf8");
-
-			var packageOverrideDescriptorPath = API.PATH.join(workspacePath, "package.local.json");
-			API.FS.writeFileSync(packageOverrideDescriptorPath, JSON.stringify(packageOverrideDescriptor, null, 4), "utf8");
-
-
-			var proc = SPAWN(API.PATH.join(__dirname, "node_modules/smi.cli/bin/smi"), [
-		        "install",
-		        "-vd"
-		    ], {
-		    	cwd: workspacePath
-		    });
-		    proc.on("error", function(err) {
-		    	return callback(err);
-		    });
-
-		    proc.stdout.on('data', function (data) {
-				if (API.VERBOSE) {
-					process.stdout.write(data);
-				}
-		    });
-		    proc.stderr.on('data', function (data) {
-				if (API.VERBOSE) {
-					process.stderr.write(data);
-				}
-		    });
-		    proc.on('close', function (code) {
-		    	if (code) {
-		    		var err = new Error("Commands exited with code: " + code);
-		    		err.code = code;
-		    		return callback(err);
-		    	}
-		        return callback(null);
-		    });
 		}
 
 		return downloadRepos(function (err) {
