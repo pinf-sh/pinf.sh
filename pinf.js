@@ -26,10 +26,6 @@ require('org.pinf.genesis.lib').forModule(require, module, function (API, export
 				"mappings": {
 					 "{{__DIRNAME__}}/.deps/github.com~pinf~genesis.pinf.org~0/source/installed/master": {
 			            "location": "git@github.com:pinf/genesis.pinf.org.git"
-			        },
-			        "genesis.pinf.org": {
-			            "location": "{{__DIRNAME__}}/.deps/github.com~pinf~genesis.pinf.org~0/source/installed/master",
-			            "install": false
 			        }
 				},
 			    "config": {
