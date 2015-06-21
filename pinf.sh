@@ -52,10 +52,10 @@ function init {
 
 	}
 
-	provisionAndInstallHarness
-	ensurePGS
-	turnOnce
-	welcome
+	provisionAndInstallHarness $@
+	ensurePGS $@
+	turnOnce $@
+	welcome $@
 
 }
 init $@

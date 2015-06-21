@@ -29,6 +29,7 @@ require('org.pinf.genesis.lib').forModule(require, module, function (API, export
 			            "install": false
 			        }
 				},
+				"dependencies": {},
 			    "config": {
 			    	"smi.cli": {
 				        "latestOnly": false,
@@ -96,6 +97,12 @@ require('org.pinf.genesis.lib').forModule(require, module, function (API, export
 				if (m) {
 					if (API.FS.existsSync(m[2])) {
 						pinfOverrideDescriptor["@extends"][m[2]] = m[2];
+						var descriptor = require(m[2]);
+						if (descriptor.dependencies) {
+							for (var name in descriptor.dependencies) {
+								packageOverrideDescriptor.dependencies[name] = descriptor.dependencies[name];
+							}
+						}
 					} else {
 						if (m[1] !== "!") {
 							throw new Error("Path '" + m[2] + "' not found (prefix with '!' to make it optional)");
