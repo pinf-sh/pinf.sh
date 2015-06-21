@@ -23,7 +23,15 @@ require('org.pinf.genesis.lib').forModule(require, module, function (API, export
 				"@extends": {}
 			};
 			var packageOverrideDescriptor = {
-				"mappings": {}
+				"mappings": {
+					 "./../.deps/github.com~pinf~genesis.pinf.org~0/source/installed/master": {
+			            "location": "git@github.com:pinf/genesis.pinf.org.git"
+			        },
+			        "genesis.pinf.org": {
+			            "location": "{{__DIRNAME__}}/.deps/github.com~pinf~genesis.pinf.org~0/source/installed/master",
+			            "install": false
+			        }
+				}
 			};
 
 			var repos = {};

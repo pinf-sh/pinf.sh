@@ -1,6 +1,6 @@
 {
   "name": "pinf.sh",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "bin": {
     "pinf.sh": "./pinf.sh"
   },
