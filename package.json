@@ -1,6 +1,6 @@
 {
   "name": "pinf.sh",
-  "version": "0.1.15",
+  "version": "0.1.17",
   "bin": {
     "pinf.sh": "./pinf.sh"
   },
@@ -9,6 +9,7 @@
     "q": "^1.4.1",
     "request": "^2.58.0",
     "smi.cli": "0.35.x",
+    "sm.resolve": "0.1.x",
     "waitfor": "^0.1.3",
     "bash.origin": "0.1.x",
     "bash.origin.pinf": "0.1.x"

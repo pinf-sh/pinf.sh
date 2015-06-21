@@ -9,6 +9,10 @@ function init {
 
 	BO_run_node "$__BO_DIR__/pinf.js" $@
 
+
+	BO_run_npm install --production
+
+
 	if [ ! -e ".pgs/.provisioned" ]; then
 		BO_callPlugin "bash.origin.pinf@0.1.8" ensure genesis $@
 	fi
