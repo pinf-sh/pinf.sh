@@ -24,7 +24,7 @@ require('org.pinf.genesis.lib').forModule(require, module, function (API, export
 			};
 			var packageOverrideDescriptor = {
 				"mappings": {
-					 "{{__DIRNAME__}}/.deps/github.com~pinf~genesis.pinf.org~0/source/installed/master": {
+					 "{{env.PGS_PACKAGES_DIRPATH}}/github.com~pinf~genesis.pinf.org~0/source/installed/master": {
 			            "location": "git@github.com:pinf/genesis.pinf.org.git",
 			            "install": false
 			        }
@@ -33,8 +33,8 @@ require('org.pinf.genesis.lib').forModule(require, module, function (API, export
 			    "config": {
 			    	"smi.cli": {
 				        "latestOnly": false,
-			            "packagesDirectory": "node_modules",
-			            "binDirectory": "node_modules/.bin"
+			            "packagesDirectory": "{{env.PGS_WORKSPACE_ROOT}}/node_modules",
+			            "binDirectory": "{{env.PGS_WORKSPACE_ROOT}}/node_modules/.bin"
 				    }
 			    }
 			};
@@ -69,7 +69,7 @@ require('org.pinf.genesis.lib').forModule(require, module, function (API, export
 						repo.uriPrefixes[uriParts.protocol + "//" + uriParts.host + "/" + pathParts.slice(1,5).join("/")] = true;
 					}
 					repo.localAlias = pathParts.slice(5).join("/");
-					repo.localUri = "{{__DIRNAME__}}/.deps/github.com~" + pathParts.slice(1,3).join("~") + "~0/source/installed/" + pathParts[4] + "/" + pathParts.slice(5).join("/");
+					repo.localUri = "{{env.PGS_PACKAGES_DIRPATH}}/github.com~" + pathParts.slice(1,3).join("~") + "~0/source/installed/" + pathParts[4] + "/" + pathParts.slice(5).join("/");
 					repo.rawurl = "https://raw.githubusercontent.com/" + pathParts.slice(1,3).join("/") + "/master/" + pathParts.slice(5).join("/");
 					return repo;
 				}
@@ -103,11 +103,16 @@ require('org.pinf.genesis.lib').forModule(require, module, function (API, export
 						var m = uri.match(/^(!)?(\/.+)$/);
 						if (m) {
 							if (API.FS.existsSync(m[2])) {
-								pinfOverrideDescriptor["@extends"][m[2]] = m[2];
-								var descriptor = require(m[2]);
+								var path = API.FS.realpathSync(m[2]);
+								pinfOverrideDescriptor["@extends"][path] = path;
+								var descriptor = require(path);
 								if (descriptor.dependencies) {
 									for (var name in descriptor.dependencies) {
-										packageOverrideDescriptor.dependencies[name] = descriptor.dependencies[name];
+										if (!packageOverrideDescriptor.mappings[name]) {
+											packageOverrideDescriptor.mappings[name] = {
+												"location": "http://registry.npmjs.org/" + name + "/-/" + name + "-" + descriptor.dependencies[name] + ".tgz"
+											};
+										}
 									}
 								}
 							} else {
