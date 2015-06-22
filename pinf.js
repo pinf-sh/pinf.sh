@@ -96,6 +96,10 @@ require('org.pinf.genesis.lib').forModule(require, module, function (API, export
 				});
 			}
 
+			if (!API.FS.existsSync(API.PATH.join(workspacePath, "node_modules"))) {
+				API.FS.mkdirSync(API.PATH.join(workspacePath, "node_modules"));
+			}
+
 			function processUriArgs (callback) {
 				var waitfor = API.WAITFOR.serial(callback);
 				process.argv.slice(2).forEach(function (uri) {
@@ -131,6 +135,20 @@ require('org.pinf.genesis.lib').forModule(require, module, function (API, export
 									if (descriptor.dependencies) {
 										for (var name in descriptor.dependencies) {
 											packageOverrideDescriptor.dependencies[name] = descriptor.dependencies[name];
+										}
+									}
+									if (descriptor.mappings) {
+										for (var name in descriptor.mappings) {
+											if (descriptor.mappings[name].alias) {
+
+												if (!API.FS.existsSync(API.PATH.join(workspacePath, "node_modules", descriptor.mappings[name].alias))) {
+
+													API.FS.symlinkSync(
+														name.replace(/^\{\{env\.PGS_PACKAGES_DIRPATH\}\}/, "../.deps"),
+														API.PATH.join(workspacePath, "node_modules", descriptor.mappings[name].alias)
+													);
+												}
+											}
 										}
 									}
 									return callback(null);
