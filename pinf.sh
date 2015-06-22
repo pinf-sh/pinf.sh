@@ -35,8 +35,13 @@ function init {
 
 		BO_format "$VERBOSE" "HEADER" "Ensuring PINF.Genesis is provisioned"
 
+		export PGS_WORKSPACE_ROOT="$(pwd)"
+		export PGS_PACKAGES_DIRPATH="$PGS_WORKSPACE_ROOT/.deps"
 		export BO_PLUGIN_SEARCH_DIRPATHS="$__BO_DIR__/node_modules"
+		export BO_PACKAGES_DIR="$PGS_PACKAGES_DIRPATH"
+		export BO_SYSTEM_CACHE_DIR="$BO_PACKAGES_DIR"
 
+		BO_log "$VERBOSE" "Using BO_SYSTEM_CACHE_DIR: $BO_SYSTEM_CACHE_DIR"
 		BO_log "$VERBOSE" "Using BO_PLUGIN_SEARCH_DIRPATHS: $BO_PLUGIN_SEARCH_DIRPATHS"
 
 		if [ ! -e ".pgs/.provisioned" ]; then
