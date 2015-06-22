@@ -55,6 +55,7 @@ function init {
 
 		BO_format "$VERBOSE" "HEADER" "Turning system once"
 
+		# NOTE: We turn using an empty profile as the base setup should not require a login.
 		export PIO_PROFILE_PATH="$__BO_DIR__/empty.profile.json"
 
 		BO_log "$VERBOSE" "Using PIO_PROFILE_PATH: $PIO_PROFILE_PATH"
