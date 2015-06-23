@@ -5,14 +5,16 @@
     "pinf.sh": "./pinf.sh"
   },
   "dependencies": {
+    "JSONPath": "brettz9/JSONPath#19b6a87041",
+    "bash.origin": "0.1.x",
+    "bash.origin.pinf": "0.1.x",
+    "fs-extra": "^0.20.0",
     "org.pinf.genesis.lib": "0.1.x",
     "q": "^1.4.1",
     "request": "^2.58.0",
-    "smi.cli": "0.35.x",
     "sm.resolve": "0.1.x",
-    "waitfor": "^0.1.3",
-    "bash.origin": "0.1.x",
-    "bash.origin.pinf": "0.1.x"
+    "smi.cli": "0.35.x",
+    "waitfor": "^0.1.3"
   },
   "config": {
     "org.pinf.genesis.lib/0": {
@@ -20,11 +22,13 @@
         "consumes": {
           "config": "org.pinf.genesis.lib/0/config",
           "PATH": "path",
-          "FS": "fs",
+          "FS": "fs-extra",
           "WAITFOR": "waitfor",
           "Q": "q",
           "URL": "url",
-          "REQUEST": "request"
+          "REQUEST": "request",
+          "RESOLVE": "sm.resolve",
+          "JSONPATH": "JSONPath"
         }
       }
     }

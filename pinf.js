@@ -4,6 +4,9 @@ const SPAWN = require("child_process").spawn;
 
 require('org.pinf.genesis.lib').forModule(require, module, function (API, exports) {
 
+	const RESOLVE = API.RESOLVE.for(module);
+
+
 	var workspacePath = process.cwd();
 
 	API.console.verbose("Running 'pinf.sh' for workspace:", workspacePath);
@@ -161,6 +164,39 @@ require('org.pinf.genesis.lib').forModule(require, module, function (API, export
 				return waitfor();
 			}
 
+
+			// POLICY: Terminology: 'override' -> deep updates existing properties only
+			// POLICY: Terminology: 'overlay' -> deep merges all new properties on top
+			function overrideGlobalPackages () {
+
+				var matches = API.JSONPATH({
+					json: pinfOverrideDescriptor,
+					path: "$..location",
+					resultType: 'all'
+				});
+				if (matches.length > 0) {
+					matches.forEach(function (match) {
+						var resolvedPath = RESOLVE.uri(match.value, {
+							scope: RESOLVE.SCOPE.SYSTEMS
+						}).toPath();
+						if (!resolvedPath) return;
+						API.console.verbose("Found mapping location '" + match.value + "' at local path '" + resolvedPath + "'");
+						match.parent[match.parentProperty] = resolvedPath;
+					});
+				}
+
+				Object.keys(packageOverrideDescriptor.mappings).forEach(function (alias) {
+					var resolvedPath = RESOLVE.uri(alias, {
+						scope: RESOLVE.SCOPE.SYSTEMS
+					}).toPath();
+					if (!resolvedPath) return;
+					API.console.verbose("Found mapping location '" + alias + "' at local path '" + resolvedPath + "'");
+					packageOverrideDescriptor.mappings[alias].location = resolvedPath
+				});
+
+				return API.Q.resolve();
+			}
+
 			return processUriArgs(function (err) {
 				if (err) return callback(err);
 
@@ -171,41 +207,48 @@ require('org.pinf.genesis.lib').forModule(require, module, function (API, export
 					};
 				});
 
-				var pinfOverrideDescriptorPath = API.PATH.join(workspacePath, "PINF.local.json");
-				API.FS.writeFileSync(pinfOverrideDescriptorPath, JSON.stringify(pinfOverrideDescriptor, null, 4), "utf8");
+				return overrideGlobalPackages().then(function () {
 
-				var packageOverrideDescriptorPath = API.PATH.join(workspacePath, "package.local.json");
-				API.FS.writeFileSync(packageOverrideDescriptorPath, JSON.stringify(packageOverrideDescriptor, null, 4), "utf8");
+					var pinfOverrideDescriptorPath = API.PATH.join(workspacePath, "PINF.local.json");
+					API.FS.writeFileSync(pinfOverrideDescriptorPath, JSON.stringify(pinfOverrideDescriptor, null, 4), "utf8");
 
+					var packageOverrideDescriptorPath = API.PATH.join(workspacePath, "package.local.json");
+					API.FS.writeFileSync(packageOverrideDescriptorPath, JSON.stringify(packageOverrideDescriptor, null, 4), "utf8");
 
-				var proc = SPAWN(API.PATH.join(__dirname, "node_modules/smi.cli/bin/smi"), [
-			        "install",
-			        "-vd"
-			    ], {
-			    	cwd: workspacePath
-			    });
-			    proc.on("error", function(err) {
-			    	return callback(err);
-			    });
+console.log("pinfOverrideDescriptor", pinfOverrideDescriptorPath, pinfOverrideDescriptor);
+console.log("packageOverrideDescriptor", packageOverrideDescriptorPath, packageOverrideDescriptor);
 
-			    proc.stdout.on('data', function (data) {
-					if (API.VERBOSE) {
-						process.stdout.write(data);
-					}
-			    });
-			    proc.stderr.on('data', function (data) {
-					if (API.VERBOSE) {
-						process.stderr.write(data);
-					}
-			    });
-			    proc.on('close', function (code) {
-			    	if (code) {
-			    		var err = new Error("Commands exited with code: " + code);
-			    		err.code = code;
-			    		return callback(err);
-			    	}
-			        return callback(null);
-			    });
+process.exit(1);
+
+					var proc = SPAWN(API.PATH.join(__dirname, "node_modules/smi.cli/bin/smi"), [
+				        "install",
+				        "-vd"
+				    ], {
+				    	cwd: workspacePath
+				    });
+				    proc.on("error", function(err) {
+				    	return callback(err);
+				    });
+
+				    proc.stdout.on('data', function (data) {
+						if (API.VERBOSE) {
+							process.stdout.write(data);
+						}
+				    });
+				    proc.stderr.on('data', function (data) {
+						if (API.VERBOSE) {
+							process.stderr.write(data);
+						}
+				    });
+				    proc.on('close', function (code) {
+				    	if (code) {
+				    		var err = new Error("Commands exited with code: " + code);
+				    		err.code = code;
+				    		return callback(err);
+				    	}
+				        return callback(null);
+				    });
+				});
 			});
 		}
 

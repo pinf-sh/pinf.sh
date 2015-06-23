@@ -26,7 +26,8 @@ function init {
 		BO_log "$VERBOSE" "Using PGS_WORKSPACE_ROOT: $PGS_WORKSPACE_ROOT"
 		BO_log "$VERBOSE" "Using PGS_PACKAGES_DIRPATH: $PGS_PACKAGES_DIRPATH"
 
-		BO_run_node "$__BO_DIR__/pinf.js" $@
+		BO_run_node "$__BO_DIR__/pinf.js"
+		BO_exit_on_error
 
 		BO_format "$VERBOSE" "FOOTER"
 	}
@@ -46,6 +47,7 @@ function init {
 
 		if [ ! -e ".pgs/.provisioned" ]; then
 			BO_callPlugin "bash.origin.pinf@0.1.8" ensure genesis $@
+			BO_exit_on_error
 		fi
 
 		BO_format "$VERBOSE" "FOOTER"
@@ -62,6 +64,7 @@ function init {
 
 		# TODO: Turn to base local setup only.
 		./boot turn $@
+		BO_exit_on_error
 
 		BO_format "$VERBOSE" "FOOTER"
 	}
