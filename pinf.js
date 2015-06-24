@@ -215,11 +215,6 @@ require('org.pinf.genesis.lib').forModule(require, module, function (API, export
 					var packageOverrideDescriptorPath = API.PATH.join(workspacePath, "package.local.json");
 					API.FS.writeFileSync(packageOverrideDescriptorPath, JSON.stringify(packageOverrideDescriptor, null, 4), "utf8");
 
-console.log("pinfOverrideDescriptor", pinfOverrideDescriptorPath, pinfOverrideDescriptor);
-console.log("packageOverrideDescriptor", packageOverrideDescriptorPath, packageOverrideDescriptor);
-
-process.exit(1);
-
 					var proc = SPAWN(API.PATH.join(__dirname, "node_modules/smi.cli/bin/smi"), [
 				        "install",
 				        "-vd"
