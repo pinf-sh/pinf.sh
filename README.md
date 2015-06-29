@@ -3,6 +3,15 @@
 pinf.sh
 =======
 
+A command-line tool that will read `pinf.json` Semantic Web orchestration files, download and install mapped resources and boot the condensed system with a given profile.
+
+
+Use Cases
+=========
+
+PINF.Genesis
+------------
+
 A quick and easy way to boot [PINF.Genesis](https://github.com/pinf/genesis.pinf.org) based systems from a URI or `PINF.json` file.
 
 A `pinf.sh` facilitated startup sequence consists of several phases:
@@ -48,4 +57,5 @@ TODO
 ----
 
   * Full JSON-schema enforcement
+  * JSON LD plugin
 
